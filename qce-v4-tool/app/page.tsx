@@ -16,6 +16,8 @@ import { ScheduledBackupMergeDialog } from "@/components/ui/scheduled-backup-mer
 import { GroupEssenceModal } from "@/components/ui/group-essence-modal"
 import { GroupFilesModal } from "@/components/ui/group-files-modal"
 import { SettingsPanel } from "@/components/ui/settings-panel"
+import { AIConfigModal } from "@/components/ui/ai-config-modal"
+import { AIAnalysisTab } from "@/components/ui/ai-analysis-tab"
 import {
   Dialog,
   DialogContent,
@@ -58,9 +60,11 @@ import {
   HardDrive,
   Database,
   HelpCircle,
+  Sparkles,
 } from "lucide-react"
 import type { CreateTaskForm, CreateScheduledExportForm } from "@/types/api"
 import { useQCE } from "@/hooks/use-qce"
+import { useAiAnalysis } from "@/hooks/use-ai-analysis"
 import { useScheduledExports } from "@/hooks/use-scheduled-exports"
 import { useChatHistory } from "@/hooks/use-chat-history"
 import { useStickerPacks } from "@/hooks/use-sticker-packs"
@@ -118,6 +122,9 @@ export default function QCEDashboard() {
   const [isScheduledMergeDialogOpen, setIsScheduledMergeDialogOpen] = useState(false)
   const [scheduledTasks, setScheduledTasks] = useState<Array<any>>([])
   const [loadingScheduledTasks, setLoadingScheduledTasks] = useState(false)
+
+  // AI 分析状态
+  const [isAiConfigModalOpen, setIsAiConfigModalOpen] = useState(false)
   
   // 聊天记录筛选状态
   const [historyFilter, setHistoryFilter] = useState<'all' | 'group' | 'friend'>('all')
@@ -165,7 +172,7 @@ export default function QCEDashboard() {
   useEffect(() => {
       if (typeof window !== "undefined") {
         const savedTab = localStorage.getItem("qce-active-tab")
-        if (savedTab && ["overview", "sessions", "tasks", "scheduled", "history", "stickers", "about"].includes(savedTab)) {
+        if (savedTab && ["overview", "sessions", "tasks", "scheduled", "history", "stickers", "ai", "about"].includes(savedTab)) {
           setActiveTabState(savedTab)
         }
         // 检查是否需要显示新手引导
@@ -239,6 +246,8 @@ export default function QCEDashboard() {
     }
   })
 
+  const aiAnalysis = useAiAnalysis()
+
   // 导出群成员头像
   const handleExportGroupAvatars = async (groupCode: string, groupName: string) => {
     const loadingId = addNotification('info', '正在导出', `正在导出群"${groupName}"的成员头像...`)
@@ -291,6 +300,17 @@ export default function QCEDashboard() {
   const handleCloseGroupFilesModal = () => {
     setIsGroupFilesModalOpen(false)
     setGroupFilesTarget(null)
+  }
+
+  // 打开 AI 分析（从会话列表快捷入口）
+  const handleOpenAiAnalysis = (
+    type: 'group' | 'friend',
+    id: string,
+    name: string,
+    peer: { chatType: number; peerUid: string }
+  ) => {
+    aiAnalysis.setTarget({ type, id, name, peer })
+    setActiveTab("ai")
   }
 
   // 打开文件位置
@@ -935,6 +955,7 @@ export default function QCEDashboard() {
               ["scheduled", "定时"],
               ["history", "聊天记录"],
               ["stickers", "表情包"],
+              ["ai", "AI 分析"],
               ["settings", "设置"],
               ["about", "关于"]
             ].map(([id, label]) => (
@@ -1496,6 +1517,7 @@ export default function QCEDashboard() {
                   onExportGroupAvatars={handleExportGroupAvatars}
                   onOpenEssenceModal={handleOpenEssenceModal}
                   onOpenGroupFilesModal={handleOpenGroupFilesModal}
+                  onOpenAiAnalysis={handleOpenAiAnalysis}
                 />
               </motion.div>
             )}
@@ -2576,6 +2598,15 @@ export default function QCEDashboard() {
               </motion.div>
             )}
 
+            {activeTab === "ai" && (
+              <AIAnalysisTab
+                groups={groups}
+                friends={friends}
+                aiHook={aiAnalysis}
+                onOpenConfig={() => setIsAiConfigModalOpen(true)}
+              />
+            )}
+
             {activeTab === "settings" && (
               <SettingsPanel />
             )}
@@ -2765,6 +2796,16 @@ export default function QCEDashboard() {
           onNotification={addNotification}
         />
       )}
+
+      {/* AI 配置模态框 */}
+      <AIConfigModal
+        open={isAiConfigModalOpen}
+        onClose={() => setIsAiConfigModalOpen(false)}
+        config={aiAnalysis.config}
+        onSave={aiAnalysis.saveConfig}
+        onClear={aiAnalysis.clearConfig}
+        onTest={aiAnalysis.testConnection}
+      />
 
       {/* 聊天记录预览模态框 */}
       <AnimatePresence>

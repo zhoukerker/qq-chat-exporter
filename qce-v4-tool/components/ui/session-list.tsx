@@ -57,6 +57,7 @@ export interface SessionListProps {
   onExportGroupAvatars?: (groupCode: string, groupName: string) => void
   onOpenEssenceModal?: (groupCode: string, groupName: string) => void
   onOpenGroupFilesModal?: (groupCode: string, groupName: string) => void
+  onOpenAiAnalysis?: (type: 'group' | 'friend', id: string, name: string, peer: { chatType: number, peerUid: string }) => void
 }
 
 // Keyboard shortcuts help text
@@ -84,6 +85,7 @@ export function SessionList({
   onExportGroupAvatars,
   onOpenEssenceModal,
   onOpenGroupFilesModal,
+  onOpenAiAnalysis,
 }: SessionListProps) {
   const {
     search,
@@ -267,6 +269,22 @@ export function SessionList({
                 导出
               </Button>
             </motion.div>
+            <motion.div whileTap={{ scale: 0.98 }}>
+              <Button
+                size="sm"
+                variant="outline"
+                className="rounded-full h-7 px-2.5 text-xs"
+                onClick={(e: React.MouseEvent) => {
+                  e.stopPropagation()
+                  onOpenAiAnalysis?.(item.type, item.id, item.name, {
+                    chatType: isGroup ? 2 : 1,
+                    peerUid: isGroup ? item.id : (friend?.uid || item.id),
+                  })
+                }}
+              >
+                AI
+              </Button>
+            </motion.div>
             {isGroup && group && (
               <>
                 <motion.div whileTap={{ scale: 0.98 }}>
@@ -315,7 +333,7 @@ export function SessionList({
         )}
       </motion.div>
     )
-  }, [batchMode, selectedItems, avatarExportLoading, STAG.item, onToggleItem, onPreviewChat, onOpenTaskWizard, onExportGroupAvatars, onOpenEssenceModal, onOpenGroupFilesModal])
+  }, [batchMode, selectedItems, avatarExportLoading, STAG.item, onToggleItem, onPreviewChat, onOpenTaskWizard, onExportGroupAvatars, onOpenEssenceModal, onOpenGroupFilesModal, onOpenAiAnalysis])
 
   return (
     <div className="space-y-4">
