@@ -1,6 +1,7 @@
 # QQ Chat Exporter
 
 将 QQ 聊天记录导出为 HTML、JSON、TXT 格式。支持定时备份、批量导出、表情包导出。
+该fork版本加入了"AI分析"功能
 
 ![hero](https://github.com/shuakami/qq-chat-exporter/blob/9959f84b/image.png?raw=true)
 
